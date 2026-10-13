@@ -605,6 +605,196 @@ def save_prescription(
         return False
 
 
+def get_all_enquiries(status: str = None, limit: int = 100) -> List[Dict]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            query = 'SELECT * FROM enquiries WHERE 1=1'
+            params: List[Any] = []
+            if status:
+                query += ' AND status = ?'
+                params.append(status)
+            query += ' ORDER BY created_at DESC LIMIT ?'
+            params.append(limit)
+            cursor.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+    except Exception as e:
+        logger.error(f"Error getting enquiries: {e}")
+        return []
+
+
+def update_enquiry_status(enquiry_id: str, status: str) -> bool:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'UPDATE enquiries SET status = ? WHERE enquiry_id = ?',
+                (status, enquiry_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"Error updating enquiry: {e}")
+        return False
+
+
+def get_all_prescriptions(status: str = None, limit: int = 100) -> List[Dict]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            query = 'SELECT * FROM pharmacy_prescriptions WHERE 1=1'
+            params: List[Any] = []
+            if status:
+                query += ' AND status = ?'
+                params.append(status)
+            query += ' ORDER BY created_at DESC LIMIT ?'
+            params.append(limit)
+            cursor.execute(query, params)
+            return [dict(row) for row in cursor.fetchall()]
+    except Exception as e:
+        logger.error(f"Error getting prescriptions: {e}")
+        return []
+
+
+def update_prescription_status(request_id: str, status: str) -> bool:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'UPDATE pharmacy_prescriptions SET status = ? WHERE request_id = ?',
+                (status, request_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"Error updating prescription: {e}")
+        return False
+
+
+def get_staff_notifications(unread_only: bool = False, limit: int = 100) -> List[Dict]:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            query = 'SELECT * FROM staff_notifications WHERE 1=1'
+            params: List[Any] = []
+            if unread_only:
+                query += ' AND is_read = 0'
+            query += ' ORDER BY created_at DESC LIMIT ?'
+            params.append(limit)
+            cursor.execute(query, params)
+            rows = []
+            for row in cursor.fetchall():
+                item = dict(row)
+                if item.get('payload'):
+                    try:
+                        item['payload'] = json.loads(item['payload'])
+                    except Exception:
+                        pass
+                rows.append(item)
+            return rows
+    except Exception as e:
+        logger.error(f"Error getting staff notifications: {e}")
+        return []
+
+
+def mark_staff_notification_read(notification_id: int) -> bool:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'UPDATE staff_notifications SET is_read = 1 WHERE id = ?',
+                (notification_id,),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error(f"Error marking notification read: {e}")
+        return False
+
+
+def mark_all_staff_notifications_read() -> bool:
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE staff_notifications SET is_read = 1 WHERE is_read = 0')
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error(f"Error marking all notifications read: {e}")
+        return False
+
+
+def get_staff_request_feed(limit: int = 100) -> List[Dict]:
+    """Unified staff inbox: appointments + enquiries + pharmacy + notifications."""
+    feed: List[Dict] = []
+    try:
+        for a in get_all_appointments(limit=limit):
+            feed.append({
+                'kind': 'appointment',
+                'id': a.get('booking_id'),
+                'title': 'Appointment',
+                'subtitle': a.get('service_type') or a.get('department_name') or a.get('doctor') or 'Booking',
+                'patient_name': a.get('patient_name'),
+                'phone': a.get('phone') or a.get('user_id'),
+                'status': a.get('status'),
+                'date': a.get('date'),
+                'time': a.get('time'),
+                'notes': a.get('notes'),
+                'created_at': a.get('created_at') or 0,
+                'raw': a,
+            })
+        for e in get_all_enquiries(limit=limit):
+            feed.append({
+                'kind': 'enquiry',
+                'id': e.get('enquiry_id'),
+                'title': 'IPD Enquiry',
+                'subtitle': e.get('enquiry_type') or 'Enquiry',
+                'patient_name': e.get('patient_name'),
+                'phone': e.get('phone') or e.get('user_id'),
+                'status': e.get('status'),
+                'date': None,
+                'time': None,
+                'notes': e.get('notes'),
+                'created_at': e.get('created_at') or 0,
+                'raw': e,
+            })
+        for p in get_all_prescriptions(limit=limit):
+            feed.append({
+                'kind': 'pharmacy',
+                'id': p.get('request_id'),
+                'title': 'Pharmacy',
+                'subtitle': p.get('notes') or 'Prescription / request',
+                'patient_name': p.get('phone') or p.get('user_id'),
+                'phone': p.get('phone') or p.get('user_id'),
+                'status': p.get('status'),
+                'date': None,
+                'time': None,
+                'notes': p.get('media_id'),
+                'created_at': p.get('created_at') or 0,
+                'raw': p,
+            })
+        for n in get_staff_notifications(limit=limit):
+            feed.append({
+                'kind': 'notification',
+                'id': str(n.get('id')),
+                'title': n.get('title') or 'Staff alert',
+                'subtitle': n.get('message'),
+                'patient_name': None,
+                'phone': n.get('user_id'),
+                'status': 'unread' if not n.get('is_read') else 'read',
+                'date': None,
+                'time': None,
+                'notes': n.get('category'),
+                'created_at': n.get('created_at') or 0,
+                'raw': n,
+            })
+        feed.sort(key=lambda x: float(x.get('created_at') or 0), reverse=True)
+        return feed[:limit]
+    except Exception as e:
+        logger.error(f"Error building staff request feed: {e}")
+        return []
+
+
 def get_appointment(booking_id: str) -> Optional[Dict]:
     """Get appointment by booking ID."""
     try:

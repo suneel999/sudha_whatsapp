@@ -35,3 +35,6 @@ Thumbs.db
 node_modules/
 dist/
 .vite/
+# Keep built CRM dashboard for easy server deploy
+!dashboard/dist/
+!dashboard/dist/**

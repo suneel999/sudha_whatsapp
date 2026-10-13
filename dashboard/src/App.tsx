@@ -4,7 +4,7 @@ import {
   Users, Calendar, Activity, MessageSquare, Search, Bell,
   LayoutDashboard, ChevronRight, RefreshCcw, Send, CheckCircle2,
   Clock, Phone, Heart, Brain, Stethoscope,
-  AlertCircle, X, Eye, UserPlus, CalendarDays, MessageCircle,
+  AlertCircle, X, Eye, CalendarDays, MessageCircle,
   Building2, TestTube, Bed, Lock, Instagram, Facebook, LogOut
 } from 'lucide-react';
 import {
@@ -13,10 +13,11 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoginForm from './components/LoginForm';
+import StaffRequests from './components/StaffRequests';
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:8000'
-  : 'https://whatsapp.sudhahospital.com';
+  : 'https://chat.sudhahospitalkphb.com';
 
 // Types - Updated to match new API
 interface Stats {
@@ -32,6 +33,11 @@ interface Stats {
   platforms: Record<string, number>;
   departments: Record<string, number>;
   test_types: Record<string, number>;
+  total_enquiries?: number;
+  open_enquiries?: number;
+  total_pharmacy?: number;
+  pending_pharmacy?: number;
+  unread_notifications?: number;
 }
 
 interface Patient {
@@ -160,7 +166,7 @@ function getPlatformDisplay(platform: string) {
 }
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('requests');
   const [stats, setStats] = useState<Stats | null>(null);
   const [weeklyData, setWeeklyData] = useState<any[]>([]);
   const [liveFeed, setLiveFeed] = useState<Interaction[]>([]);
@@ -740,6 +746,7 @@ const App: React.FC = () => {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {[
+            { id: 'requests', icon: Bell, label: 'Staff Requests' },
             { id: 'overview', icon: LayoutDashboard, label: 'Dashboard' },
             { id: 'patients', icon: Users, label: 'Patients' },
             { id: 'appointments', icon: Calendar, label: 'Appointments' },
@@ -796,6 +803,7 @@ const App: React.FC = () => {
                 Live Dashboard
               </p>
               <h2 className="text-2xl font-bold text-slate-800 mt-1">
+                {activeTab === 'requests' && 'Staff Requests Inbox'}
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'patients' && 'Patient Directory'}
                 {activeTab === 'appointments' && 'Appointment Manager'}
@@ -959,6 +967,18 @@ const App: React.FC = () => {
             </div>
           ) : (
             <AnimatePresence mode="wait">
+              {/* STAFF REQUESTS INBOX */}
+              {activeTab === 'requests' && (
+                <motion.div
+                  key="requests"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <StaffRequests apiBase={API_BASE} />
+                </motion.div>
+              )}
+
               {/* OVERVIEW TAB */}
               {activeTab === 'overview' && (
                 <motion.div
@@ -973,10 +993,10 @@ const App: React.FC = () => {
                     {[
                       { label: 'Total Patients', value: stats?.total_patients || 0, icon: Users, color: 'cyan' },
                       { label: 'Appointments', value: stats?.total_appointments || 0, icon: Calendar, color: 'indigo' },
-                      { label: 'Diagnostics', value: stats?.total_diagnostics || 0, icon: TestTube, color: 'emerald' },
-                      { label: 'Admissions', value: stats?.total_admissions || 0, icon: Bed, color: 'amber' },
+                      { label: 'Open Enquiries', value: stats?.open_enquiries || 0, icon: Bed, color: 'amber' },
+                      { label: 'Pharmacy Pending', value: stats?.pending_pharmacy || 0, icon: Activity, color: 'emerald' },
                       { label: "Today's Appts", value: stats?.today_appointments || 0, icon: CalendarDays, color: 'rose' },
-                      { label: 'New This Week', value: stats?.new_patients_week || 0, icon: UserPlus, color: 'violet' },
+                      { label: 'Unread Alerts', value: stats?.unread_notifications || 0, icon: Bell, color: 'violet' },
                     ].map((stat, idx) => (
                       <div key={idx} className={`stat-card ${stat.color} card-hover`}>
                         <div className="flex justify-between items-start mb-3">

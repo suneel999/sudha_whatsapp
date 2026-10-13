@@ -1,1 +1,1 @@
-Use live domain chat.sudhahospitalkphb.com for nginx and deploy docs
+Add staff requests inbox dashboard for WhatsApp bookings and enquiries

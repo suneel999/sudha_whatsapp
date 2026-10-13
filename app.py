@@ -218,6 +218,28 @@ def health_check():
     }), 200
 
 
+# Serve built CRM dashboard (dashboard/dist) at /crm
+_DASHBOARD_DIST = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dashboard', 'dist')
+
+
+@app.route('/crm', defaults={'path': ''})
+@app.route('/crm/<path:path>')
+def serve_crm_dashboard(path: str):
+    from flask import send_from_directory
+
+    if not os.path.isdir(_DASHBOARD_DIST):
+        return jsonify({
+            'error': 'Dashboard not built',
+            'hint': 'cd dashboard && npm install && npm run build'
+        }), 404
+
+    target = path or 'index.html'
+    full = os.path.join(_DASHBOARD_DIST, target)
+    if path and os.path.isfile(full):
+        return send_from_directory(_DASHBOARD_DIST, path)
+    return send_from_directory(_DASHBOARD_DIST, 'index.html')
+
+
 
 
 

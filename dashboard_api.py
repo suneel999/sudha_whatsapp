@@ -16,7 +16,11 @@ from database import (
     get_all_appointments, get_all_diagnostics, get_all_admissions,
     get_dashboard_stats, get_recent_bookings, get_all_patients,
     set_patient_hospital_id, set_patient_automation_paused,
-    update_admission_status, log_interaction, get_crm_session
+    update_admission_status, log_interaction, get_crm_session,
+    get_all_enquiries, update_enquiry_status,
+    get_all_prescriptions, update_prescription_status,
+    get_staff_notifications, mark_staff_notification_read,
+    mark_all_staff_notifications_read, get_staff_request_feed,
 )
 
 logger = logging.getLogger(__name__)
@@ -173,6 +177,29 @@ def get_stats():
             ''')
             test_types = {row['test_type']: row['count'] for row in cursor.fetchall()}
 
+            # Sudha-specific request counts
+            try:
+                cursor.execute('SELECT COUNT(*) FROM enquiries')
+                total_enquiries = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM enquiries WHERE status = 'open'")
+                open_enquiries = cursor.fetchone()[0]
+            except Exception:
+                total_enquiries = 0
+                open_enquiries = 0
+            try:
+                cursor.execute('SELECT COUNT(*) FROM pharmacy_prescriptions')
+                total_pharmacy = cursor.fetchone()[0]
+                cursor.execute("SELECT COUNT(*) FROM pharmacy_prescriptions WHERE status = 'pending'")
+                pending_pharmacy = cursor.fetchone()[0]
+            except Exception:
+                total_pharmacy = 0
+                pending_pharmacy = 0
+            try:
+                cursor.execute('SELECT COUNT(*) FROM staff_notifications WHERE is_read = 0')
+                unread_notifications = cursor.fetchone()[0]
+            except Exception:
+                unread_notifications = 0
+
             return jsonify({
                 'total_patients': total_patients,
                 'total_appointments': total_appointments,
@@ -185,7 +212,12 @@ def get_stats():
                 'new_patients_week': new_patients_week,
                 'platforms': platforms,
                 'departments': departments,
-                'test_types': test_types
+                'test_types': test_types,
+                'total_enquiries': total_enquiries,
+                'open_enquiries': open_enquiries,
+                'total_pharmacy': total_pharmacy,
+                'pending_pharmacy': pending_pharmacy,
+                'unread_notifications': unread_notifications,
             }), 200
     except Exception as e:
         logger.error(f"Dashboard API Error (stats): {e}")
@@ -859,6 +891,118 @@ def get_dashboard():
         }), 200
     except Exception as e:
         logger.error(f"Dashboard API Error (dashboard): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ SUDHA STAFF REQUESTS ============
+
+@dashboard_bp.route('/api/staff/requests', methods=['GET'])
+@require_auth
+def staff_requests_feed():
+    """Unified inbox of all WhatsApp requests for hospital staff."""
+    limit = request.args.get('limit', 150, type=int)
+    kind = (request.args.get('kind') or '').strip().lower()
+    try:
+        feed = get_staff_request_feed(limit=limit)
+        if kind and kind != 'all':
+            feed = [item for item in feed if item.get('kind') == kind]
+        return jsonify(feed), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (staff requests): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/enquiries', methods=['GET'])
+@require_auth
+def list_enquiries():
+    status = request.args.get('status')
+    limit = request.args.get('limit', 100, type=int)
+    try:
+        return jsonify(get_all_enquiries(status=status, limit=limit)), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (enquiries): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/enquiries/<enquiry_id>/status', methods=['PUT'])
+@require_auth
+def set_enquiry_status(enquiry_id):
+    data = request.get_json() or {}
+    status = (data.get('status') or '').strip()
+    if not status:
+        return jsonify({'error': 'status required'}), 400
+    try:
+        ok = update_enquiry_status(enquiry_id, status)
+        if not ok:
+            return jsonify({'error': 'Enquiry not found'}), 404
+        return jsonify({'success': True, 'enquiry_id': enquiry_id, 'status': status}), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (enquiry status): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/pharmacy', methods=['GET'])
+@require_auth
+def list_pharmacy():
+    status = request.args.get('status')
+    limit = request.args.get('limit', 100, type=int)
+    try:
+        return jsonify(get_all_prescriptions(status=status, limit=limit)), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (pharmacy): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/pharmacy/<request_id>/status', methods=['PUT'])
+@require_auth
+def set_pharmacy_status(request_id):
+    data = request.get_json() or {}
+    status = (data.get('status') or '').strip()
+    if not status:
+        return jsonify({'error': 'status required'}), 400
+    try:
+        ok = update_prescription_status(request_id, status)
+        if not ok:
+            return jsonify({'error': 'Pharmacy request not found'}), 404
+        return jsonify({'success': True, 'request_id': request_id, 'status': status}), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (pharmacy status): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/staff/notifications', methods=['GET'])
+@require_auth
+def list_staff_notifications():
+    unread_only = request.args.get('unread', '0') in ('1', 'true', 'True')
+    limit = request.args.get('limit', 100, type=int)
+    try:
+        return jsonify(get_staff_notifications(unread_only=unread_only, limit=limit)), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (staff notifications): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/staff/notifications/<int:notification_id>/read', methods=['POST'])
+@require_auth
+def read_staff_notification(notification_id):
+    try:
+        ok = mark_staff_notification_read(notification_id)
+        if not ok:
+            return jsonify({'error': 'Notification not found'}), 404
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (read notification): {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@dashboard_bp.route('/api/staff/notifications/read-all', methods=['POST'])
+@require_auth
+def read_all_staff_notifications():
+    try:
+        mark_all_staff_notifications_read()
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        logger.error(f"Dashboard API Error (read all notifications): {e}")
         return jsonify({'error': str(e)}), 500
 
 
