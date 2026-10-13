@@ -899,14 +899,32 @@ def get_dashboard():
 @dashboard_bp.route('/api/staff/requests', methods=['GET'])
 @require_auth
 def staff_requests_feed():
-    """Unified inbox of all WhatsApp requests for hospital staff."""
-    limit = request.args.get('limit', 150, type=int)
+    """Unified Sudha front-desk inbox (OPD / Ultrasound / Lab / Pharmacy / IPD)."""
+    limit = request.args.get('limit', 200, type=int)
     kind = (request.args.get('kind') or '').strip().lower()
+    flow = (request.args.get('flow') or '').strip().lower()
+    queue = (request.args.get('queue') or '').strip().lower()  # action | today | all
     try:
-        feed = get_staff_request_feed(limit=limit)
+        feed = get_staff_request_feed(limit=max(limit, 300))
         if kind and kind != 'all':
             feed = [item for item in feed if item.get('kind') == kind]
-        return jsonify(feed), 200
+        if flow and flow != 'all':
+            feed = [item for item in feed if item.get('flow') == flow]
+
+        if queue == 'action':
+            feed = [item for item in feed if item.get('needs_action')]
+        elif queue == 'today':
+            today = datetime.now().strftime('%Y-%m-%d')
+            feed = [
+                item for item in feed
+                if (item.get('date') == today)
+                or (
+                    item.get('needs_action')
+                    and item.get('flow') in ('pharmacy', 'ipd', 'alert')
+                )
+            ]
+
+        return jsonify(feed[:limit]), 200
     except Exception as e:
         logger.error(f"Dashboard API Error (staff requests): {e}")
         return jsonify({'error': str(e)}), 500

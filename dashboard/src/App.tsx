@@ -737,23 +737,21 @@ const App: React.FC = () => {
               <Building2 size={28} />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Sudha</h1>
-              <p className="text-xs text-cyan-100 font-medium">Hospital CRM</p>
+              <h1 className="text-xl font-bold tracking-tight">Sudha Hospital</h1>
+              <p className="text-xs text-cyan-100 font-medium">Front Office Desk</p>
             </div>
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation — Sudha WhatsApp flows */}
         <nav className="flex-1 p-4 space-y-1">
           {[
-            { id: 'requests', icon: Bell, label: 'Staff Requests' },
-            { id: 'overview', icon: LayoutDashboard, label: 'Dashboard' },
+            { id: 'requests', icon: Bell, label: 'Front Desk' },
+            { id: 'appointments', icon: Calendar, label: 'Bookings' },
+            { id: 'calendar', icon: CalendarDays, label: 'Today / Calendar' },
+            { id: 'omnichannel', icon: MessageSquare, label: 'WhatsApp Chat' },
             { id: 'patients', icon: Users, label: 'Patients' },
-            { id: 'appointments', icon: Calendar, label: 'Appointments' },
-            { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
-            { id: 'diagnostics', icon: TestTube, label: 'Diagnostics' },
-            { id: 'admissions', icon: Bed, label: 'Admissions' },
-            { id: 'omnichannel', icon: MessageSquare, label: 'Messages' },
+            { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
           ].map((item) => (
             <button
               key={item.id}
@@ -800,17 +798,15 @@ const App: React.FC = () => {
             <div>
               <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Live Dashboard
+                Live · Sudha WhatsApp
               </p>
               <h2 className="text-2xl font-bold text-slate-800 mt-1">
-                {activeTab === 'requests' && 'Staff Requests Inbox'}
-                {activeTab === 'overview' && 'Dashboard Overview'}
-                {activeTab === 'patients' && 'Patient Directory'}
-                {activeTab === 'appointments' && 'Appointment Manager'}
-                {activeTab === 'diagnostics' && 'Diagnostic Bookings'}
-                {activeTab === 'admissions' && 'Admission Requests'}
-                {activeTab === 'omnichannel' && 'Messages (WhatsApp, Instagram, Facebook)'}
-                {activeTab === 'calendar' && 'Appointments Calendar'}
+                {activeTab === 'requests' && 'Front Desk Inbox'}
+                {activeTab === 'overview' && 'Overview'}
+                {activeTab === 'patients' && 'Patients'}
+                {activeTab === 'appointments' && 'OPD · Ultrasound · Lab Bookings'}
+                {activeTab === 'omnichannel' && 'WhatsApp Messages'}
+                {activeTab === 'calendar' && 'Calendar'}
               </h2>
             </div>
 
@@ -991,12 +987,12 @@ const App: React.FC = () => {
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                     {[
-                      { label: 'Total Patients', value: stats?.total_patients || 0, icon: Users, color: 'cyan' },
-                      { label: 'Appointments', value: stats?.total_appointments || 0, icon: Calendar, color: 'indigo' },
-                      { label: 'Open Enquiries', value: stats?.open_enquiries || 0, icon: Bed, color: 'amber' },
-                      { label: 'Pharmacy Pending', value: stats?.pending_pharmacy || 0, icon: Activity, color: 'emerald' },
-                      { label: "Today's Appts", value: stats?.today_appointments || 0, icon: CalendarDays, color: 'rose' },
-                      { label: 'Unread Alerts', value: stats?.unread_notifications || 0, icon: Bell, color: 'violet' },
+                      { label: 'Patients', value: stats?.total_patients || 0, icon: Users, color: 'cyan' },
+                      { label: 'Bookings', value: stats?.total_appointments || 0, icon: Calendar, color: 'indigo' },
+                      { label: 'IPD Open', value: stats?.open_enquiries || 0, icon: Bed, color: 'amber' },
+                      { label: 'Pharmacy Queue', value: stats?.pending_pharmacy || 0, icon: Activity, color: 'emerald' },
+                      { label: "Today's Bookings", value: stats?.today_appointments || 0, icon: CalendarDays, color: 'rose' },
+                      { label: 'Alerts', value: stats?.unread_notifications || 0, icon: Bell, color: 'violet' },
                     ].map((stat, idx) => (
                       <div key={idx} className={`stat-card ${stat.color} card-hover`}>
                         <div className="flex justify-between items-start mb-3">
@@ -1010,22 +1006,22 @@ const App: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Channels breakdown - WhatsApp, Instagram, Facebook */}
-                  {stats?.platforms && Object.keys(stats.platforms).length > 0 && (
+                  {/* WhatsApp channel only for Sudha */}
+                  {stats?.platforms && (
                     <div className="card p-6">
-                      <h3 className="font-bold text-slate-800 mb-4">Patients by Channel</h3>
+                      <h3 className="font-bold text-slate-800 mb-4">WhatsApp Patients</h3>
                       <div className="flex flex-wrap gap-4">
-                        {['whatsapp', 'instagram', 'facebook'].map((key) => {
-                          const count = stats.platforms[key] || 0;
-                          const cfg = getPlatformDisplay(key);
+                        {(() => {
+                          const count = stats.platforms.whatsapp || stats.total_patients || 0;
+                          const cfg = getPlatformDisplay('whatsapp');
                           return (
-                            <div key={key} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
                               <span className={`w-3 h-3 rounded-full ${cfg.bgClass}`} />
                               <span className="font-semibold text-slate-800">{cfg.label}</span>
                               <span className="text-2xl font-bold text-slate-800">{count}</span>
                             </div>
                           );
-                        })}
+                        })()}
                       </div>
                     </div>
                   )}

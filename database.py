@@ -724,68 +724,131 @@ def mark_all_staff_notifications_read() -> bool:
         return False
 
 
+def _sudha_flow_from_service(service_type: Optional[str], department_name: Optional[str] = None) -> str:
+    """Map appointment service_type / department to Sudha front-desk flow."""
+    text = f"{service_type or ''} {department_name or ''}".lower()
+    if text.startswith('opd') or 'opd' in text or 'out patient' in text:
+        return 'opd'
+    if text.startswith('ultrasound') or 'ultrasound' in text or 'usg' in text or 'scan' in text:
+        return 'ultrasound'
+    if text.startswith('lab') or 'lab' in text or 'patholog' in text:
+        return 'lab'
+    return 'opd'
+
+
+def _humanize_service(service_type: Optional[str], fallback: str = '') -> str:
+    if not service_type:
+        return fallback or 'Booking'
+    label = str(service_type).replace('_', ' ').strip()
+    return label.title() if label else (fallback or 'Booking')
+
+
 def get_staff_request_feed(limit: int = 100) -> List[Dict]:
-    """Unified staff inbox: appointments + enquiries + pharmacy + notifications."""
+    """Unified Sudha front-desk inbox: OPD / USG / Lab / Pharmacy / IPD / alerts."""
     feed: List[Dict] = []
     try:
         for a in get_all_appointments(limit=limit):
+            flow = _sudha_flow_from_service(a.get('service_type'), a.get('department_name'))
+            flow_titles = {
+                'opd': 'OPD Appointment',
+                'ultrasound': 'Ultrasound Scan',
+                'lab': 'Lab Test',
+            }
+            service_label = (
+                a.get('doctor')
+                or a.get('department_name')
+                or _humanize_service(a.get('service_type'))
+            )
             feed.append({
                 'kind': 'appointment',
+                'flow': flow,
                 'id': a.get('booking_id'),
-                'title': 'Appointment',
-                'subtitle': a.get('service_type') or a.get('department_name') or a.get('doctor') or 'Booking',
+                'title': flow_titles.get(flow, 'Appointment'),
+                'subtitle': service_label,
                 'patient_name': a.get('patient_name'),
                 'phone': a.get('phone') or a.get('user_id'),
                 'status': a.get('status'),
                 'date': a.get('date'),
                 'time': a.get('time'),
                 'notes': a.get('notes'),
+                'department': a.get('department_name') or a.get('department'),
+                'doctor': a.get('doctor'),
+                'service_type': a.get('service_type'),
                 'created_at': a.get('created_at') or 0,
+                'needs_action': (a.get('status') or '').lower() in ('confirmed', 'pending', 'open', ''),
                 'raw': a,
             })
         for e in get_all_enquiries(limit=limit):
             feed.append({
                 'kind': 'enquiry',
+                'flow': 'ipd',
                 'id': e.get('enquiry_id'),
                 'title': 'IPD Enquiry',
-                'subtitle': e.get('enquiry_type') or 'Enquiry',
+                'subtitle': e.get('enquiry_type') or e.get('department') or 'In Patient',
                 'patient_name': e.get('patient_name'),
                 'phone': e.get('phone') or e.get('user_id'),
                 'status': e.get('status'),
                 'date': None,
                 'time': None,
                 'notes': e.get('notes'),
+                'department': e.get('department'),
+                'doctor': None,
+                'service_type': e.get('enquiry_type'),
+                'hospital_id': e.get('hospital_id'),
                 'created_at': e.get('created_at') or 0,
+                'needs_action': (e.get('status') or '').lower() in ('open', 'pending', ''),
                 'raw': e,
             })
         for p in get_all_prescriptions(limit=limit):
             feed.append({
                 'kind': 'pharmacy',
+                'flow': 'pharmacy',
                 'id': p.get('request_id'),
-                'title': 'Pharmacy',
-                'subtitle': p.get('notes') or 'Prescription / request',
+                'title': 'Pharmacy Request',
+                'subtitle': p.get('notes') or 'Prescription upload',
                 'patient_name': p.get('phone') or p.get('user_id'),
                 'phone': p.get('phone') or p.get('user_id'),
                 'status': p.get('status'),
                 'date': None,
                 'time': None,
-                'notes': p.get('media_id'),
+                'notes': p.get('notes'),
+                'media_id': p.get('media_id'),
+                'media_url': p.get('media_url'),
+                'department': 'Pharmacy',
+                'doctor': None,
+                'service_type': 'pharmacy',
                 'created_at': p.get('created_at') or 0,
+                'needs_action': (p.get('status') or '').lower() in ('pending', 'open', ''),
                 'raw': p,
             })
         for n in get_staff_notifications(limit=limit):
+            category = (n.get('category') or '').lower()
+            if category in ('appointment', 'booking'):
+                flow = 'alert'
+            elif category in ('pharmacy', 'prescription'):
+                flow = 'pharmacy'
+            elif category in ('enquiry', 'ipd'):
+                flow = 'ipd'
+            else:
+                flow = 'alert'
+            is_unread = not n.get('is_read')
             feed.append({
                 'kind': 'notification',
+                'flow': flow,
                 'id': str(n.get('id')),
                 'title': n.get('title') or 'Staff alert',
                 'subtitle': n.get('message'),
                 'patient_name': None,
                 'phone': n.get('user_id'),
-                'status': 'unread' if not n.get('is_read') else 'read',
+                'status': 'unread' if is_unread else 'read',
                 'date': None,
                 'time': None,
                 'notes': n.get('category'),
+                'department': None,
+                'doctor': None,
+                'service_type': n.get('category'),
                 'created_at': n.get('created_at') or 0,
+                'needs_action': bool(is_unread),
                 'raw': n,
             })
         feed.sort(key=lambda x: float(x.get('created_at') or 0), reverse=True)
