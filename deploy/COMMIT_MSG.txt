@@ -1,1 +1,1 @@
-Add staff requests inbox dashboard for WhatsApp bookings and enquiries
+Commit built CRM dist so /crm works on production server
