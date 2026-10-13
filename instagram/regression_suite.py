@@ -1,0 +1,287 @@
+"""
+Lightweight regression suite for Instagram DM assistant.
+Runs multi-turn scenarios and validates expected keywords in replies.
+"""
+
+import os
+
+from ai_handler import (
+    get_on_ai_response,
+    USER_STATES,
+    CONVERSATION_HISTORY,
+    STATE_DB_PATH,
+)
+
+
+def reset_state():
+    USER_STATES.clear()
+    CONVERSATION_HISTORY.clear()
+    if os.path.exists(STATE_DB_PATH):
+        os.remove(STATE_DB_PATH)
+
+
+def run_scenario(scenario_id, turns):
+    uid = f"reg_{scenario_id}"
+    for idx, turn in enumerate(turns, start=1):
+        user_text = turn["user"]
+        expected_any = [e.lower() for e in turn.get("expect_any", [])]
+        forbidden = [f.lower() for f in turn.get("forbid", [])]
+
+        bot = get_on_ai_response(user_text, uid).lower()
+
+        if expected_any and not any(token in bot for token in expected_any):
+            return False, idx, user_text, bot, f"Missing expected token(s): {expected_any}"
+        if forbidden and any(token in bot for token in forbidden):
+            return False, idx, user_text, bot, f"Contains forbidden token(s): {forbidden}"
+    return True, None, None, None, None
+
+
+SCENARIOS = [
+    [
+        {"user": "hi", "expect_any": ["welcome", "hello"]},
+        {"user": "price whey", "expect_any": ["2lb", "5lb"]},
+        {"user": "2lb", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 156.45"]},
+        {"user": "and in ksa", "expect_any": ["sar 248.40"]},
+        {"user": "what about 5lb", "expect_any": ["sar 389.85"]},
+        {"user": "hi", "expect_any": ["welcome", "hello"]},
+        {"user": "what about egypt", "expect_any": ["which product", "product price"]},
+    ],
+    [
+        {"user": "list all products", "expect_any": ["protein", "energy & aminos", "vitamins/health"]},
+        {"user": "recovery", "expect_any": ["casein", "glutamine", "bcaa"]},
+        {"user": "price bcaa", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "egypt", "expect_any": ["550 le"]},
+        {"user": "and uae", "expect_any": ["aed 136.50"]},
+        {"user": "hi", "expect_any": ["welcome", "hello"]},
+        {"user": "and ksa", "expect_any": ["which product", "product price"]},
+    ],
+    [
+        {"user": "hi", "expect_any": ["welcome", "hello"]},
+        {"user": "price", "expect_any": ["which product", "product price"]},
+        {"user": "whey", "expect_any": ["2lb", "5lb"]},
+        {"user": "2lb", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 156.45"]},
+        {"user": "and in ksa", "expect_any": ["sar 248.40"]},
+    ],
+    [
+        {"user": "prce", "expect_any": ["which product", "product price"]},
+        {"user": "hidro", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "egpyt", "expect_any": ["1750 le"]},
+        {"user": "and saoodi", "expect_any": ["sar 441.60"]},
+    ],
+    [
+        {"user": "show me protein", "expect_any": ["gold standard 100% whey", "platinum hydrowhey"]},
+        {"user": "gold standrad cost", "expect_any": ["2lb", "5lb"]},
+        {"user": "5lb", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["sar 389.85"]},
+    ],
+    [
+        {"user": "price isolate", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["sar 362.25"]},
+        {"user": "what about egypt", "expect_any": ["2,200 le"]},
+    ],
+    [
+        {"user": "authntic?", "expect_any": ["sticker", "originalon.com"]},
+        {"user": "veagn?", "expect_any": ["vegan protein", "do not currently offer vegan"]},
+    ],
+    [
+        {"user": "price pre workout", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "egypt", "expect_any": ["650 le"]},
+        {"user": "and ksa", "expect_any": ["do not have a ksa price", "check www.sporter.com"]},
+    ],
+    [
+        {"user": "what products are you having", "expect_any": ["main categories"]},
+        {"user": "vitmins", "expect_any": ["opti-men", "fish oil softgels"]},
+        {"user": "fish oil price", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 72.45"]},
+    ],
+    [
+        {"user": "price serious mass", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "egypt", "expect_any": ["1650 le"]},
+        {"user": "and in uae", "expect_any": ["aed 157.50"]},
+    ],
+    [
+        {"user": "how much glutamine in ksa", "expect_any": ["sar 205.85"]},
+    ],
+    [
+        {"user": "gold standard whey 5lb ksa price", "expect_any": ["sar 389.85"]},
+    ],
+    [
+        {"user": "hii can u hlp", "expect_any": ["welcome", "hello"]},
+        {"user": "prce hydro in uae", "expect_any": ["aed 336"]},
+    ],
+    [
+        {"user": "plz show protien", "expect_any": ["protein products", "gold standard 100% whey"]},
+        {"user": "price this", "expect_any": ["pick one product", "send the product name"]},
+    ],
+    [
+        {"user": "price whey", "expect_any": ["2lb", "5lb"]},
+        {"user": "both", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["2lb is sar 248.40", "5lb is sar 389.85"]},
+    ],
+    [
+        {"user": "how much creatine", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["do not have a ksa price", "check www.sporter.com"]},
+    ],
+    [
+        {"user": "price bcaa", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["do not have a ksa price", "check www.sporter.com"]},
+    ],
+    [
+        {"user": "price bcaa", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "egypt", "expect_any": ["550 le"]},
+        {"user": "and uae", "expect_any": ["aed 136.50"]},
+    ],
+    [
+        {"user": "is your whey glutan free", "expect_any": ["gluten-free", "cookies and cream"]},
+    ],
+    [
+        {"user": "do you have vegn protien", "expect_any": ["do not currently offer vegan", "vegan protein"]},
+    ],
+    [
+        {"user": "is this original", "expect_any": ["authenticity sticker", "originalon.com"]},
+    ],
+    [
+        {"user": "price optimen", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 152.25"]},
+        {"user": "and egypt", "expect_any": ["850 le"]},
+    ],
+    [
+        {"user": "price fishoil saudi", "expect_any": ["sar 113.85"]},
+    ],
+    [
+        {"user": "price glutamin egypt", "expect_any": ["450 le"]},
+    ],
+    [
+        {"user": "serious mass price in egpyt", "expect_any": ["1650 le"]},
+    ],
+    [
+        {"user": "pre workout price", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["do not have a uae price", "check www.sporter.com"]},
+    ],
+    [
+        {"user": "gold standard 2lb egypt", "expect_any": ["850 le"]},
+        {"user": "and 5lb", "expect_any": ["1750 le"]},
+    ],
+    [
+        {"user": "price", "expect_any": ["which product", "product price"]},
+        {"user": "that", "expect_any": ["product name", "which product"]},
+    ],
+    [
+        {"user": "protein", "expect_any": ["protein products"]},
+        {"user": "hydro", "expect_any": ["platinum hydrowhey", "details or price", "which country"]},
+    ],
+    [
+        {"user": "price hydro", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["sar 441.60"]},
+        {"user": "and in dubai", "expect_any": ["aed 336"]},
+    ],
+    [
+        {"user": "cost isoalte uae", "expect_any": ["aed 367.50"]},
+    ],
+    [
+        {"user": "i need protien", "expect_any": ["protein products"]},
+        {"user": "gold standard", "expect_any": ["2lb", "5lb"]},
+        {"user": "both prices egypt", "expect_any": ["2lb is 850 le", "5lb is 1750 le"]},
+    ],
+    [
+        {"user": "hiiii", "expect_any": ["welcome", "hello"]},
+        {"user": "list all products", "expect_any": ["main categories"]},
+    ],
+    [
+        {"user": "heloooo", "expect_any": ["welcome", "hello"]},
+        {"user": "show all products", "expect_any": ["main categories"]},
+    ],
+    [
+        {"user": "give me all your products", "expect_any": ["main categories"]},
+        {"user": "protein", "expect_any": ["protein products"]},
+    ],
+    [
+        {"user": "what all products do u have", "expect_any": ["main categories"]},
+    ],
+    [
+        {"user": "gold standard in uae", "expect_any": ["2lb", "5lb"]},
+        {"user": "both prices", "expect_any": ["which country", "uae, ksa, or egypt", "2lb is aed 156.45"]},
+    ],
+    [
+        {"user": "price whey", "expect_any": ["2lb", "5lb"]},
+        {"user": "2lb", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 156.45"]},
+        {"user": "what about 5lb", "expect_any": ["aed 282.88"]},
+    ],
+    [
+        {"user": "price hydro", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "uae", "expect_any": ["aed 336"]},
+        {"user": "and ksa", "expect_any": ["sar 441.60"]},
+    ],
+    [
+        {"user": "where can i find your products", "expect_any": ["sporter.com", "ifit-eg.com"]},
+    ],
+    [
+        {"user": "where available in ksa", "expect_any": ["sporter.com", "dr. nutrition"]},
+    ],
+    [
+        {"user": "is this original", "expect_any": ["sticker", "originalon.com"]},
+        {"user": "no sticker", "expect_any": ["cannot be guaranteed", "sticker"]},
+    ],
+    [
+        {"user": "whey vs isolate", "expect_any": ["lower fat", "higher protein"]},
+    ],
+    [
+        {"user": "is whey fully gluten free", "expect_any": ["gluten-free", "cookies and cream"]},
+    ],
+    [
+        {"user": "thanks", "expect_any": ["welcome", "another product price", "sure"]},
+    ],
+    [
+        {"user": "good evening", "expect_any": ["good evening", "product or price"]},
+    ],
+    [
+        {"user": "show vitamins products", "expect_any": ["opti-men", "fish oil softgels"]},
+        {"user": "opti men price", "expect_any": ["which country", "uae, ksa, or egypt"]},
+        {"user": "ksa", "expect_any": ["sar 124.20"]},
+    ],
+    [
+        {"user": "price fish oil in dubai", "expect_any": ["aed 72.45"]},
+    ],
+    [
+        {"user": "price preworkout egypt", "expect_any": ["650 le"]},
+    ],
+    [
+        {"user": "price preworkout uae", "expect_any": ["check www.sporter.com", "do not have a uae price"]},
+    ],
+    [
+        {"user": "price creatine egypt", "expect_any": ["470 le"]},
+    ],
+    [
+        {"user": "price bcaa egypt", "expect_any": ["550 le"]},
+        {"user": "what about uae", "expect_any": ["aed 136.50"]},
+    ],
+]
+
+
+def main():
+    reset_state()
+    passed = 0
+    failed = 0
+
+    for i, scenario in enumerate(SCENARIOS, start=1):
+        ok, turn_idx, user_text, bot_text, reason = run_scenario(i, scenario)
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+            print(f"[FAIL] Scenario {i}, turn {turn_idx}")
+            print(f"  user: {user_text}")
+            print(f"  bot : {bot_text}")
+            print(f"  err : {reason}")
+
+    total = passed + failed
+    rate = (passed / total) * 100 if total else 0
+    print(f"\nPass: {passed}/{total} ({rate:.1f}%)")
+    return 0 if failed == 0 else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

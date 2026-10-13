@@ -1,0 +1,286 @@
+{
+  "version": "3.0",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "APPOINTMENT": ["DETAILS"],
+    "DETAILS": ["SUMMARY"],
+    "SUMMARY": []
+  },
+  "screens": [
+    {
+      "id": "APPOINTMENT",
+      "title": "Book Appointment",
+      "terminal": false,
+      "data": {
+        "doctors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "__example__": [
+            { "id": "dr_mahesh", "title": "Dr. Mahesh Babu (Cardiology)" }
+          ]
+        },
+        "dates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "__example__": [
+            { "id": "2026-02-04", "title": "Tue, 04 Feb 2026" }
+          ]
+        },
+        "time_slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" }
+            }
+          },
+          "__example__": [
+            { "id": "09:00 AM", "title": "09:00 AM" }
+          ]
+        },
+        "is_dates_enabled": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "is_time_enabled": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "Form",
+            "name": "appointment_form",
+            "children": [
+              {
+                "type": "Dropdown",
+                "name": "doctor",
+                "label": "Select Doctor",
+                "required": true,
+                "data-source": "${data.doctors}",
+                "on-select-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "trigger": "doctor_selected",
+                    "doctor": "${form.doctor}"
+                  }
+                }
+              },
+              {
+                "type": "Dropdown",
+                "name": "appointment_date",
+                "label": "Select Date",
+                "required": true,
+                "data-source": "${data.dates}",
+                "enabled": "${data.is_dates_enabled}",
+                "on-select-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "trigger": "date_selected",
+                    "doctor": "${form.doctor}",
+                    "appointment_date": "${form.appointment_date}"
+                  }
+                }
+              },
+              {
+                "type": "Dropdown",
+                "name": "time_slot",
+                "label": "Select Time",
+                "required": true,
+                "data-source": "${data.time_slots}",
+                "enabled": "${data.is_time_enabled}"
+              },
+              {
+                "type": "Footer",
+                "label": "Next",
+                "on-click-action": {
+                  "name": "navigate",
+                  "next": {
+                    "type": "screen",
+                    "name": "DETAILS"
+                  },
+                  "payload": {
+                    "doctor": "${form.doctor}",
+                    "appointment_date": "${form.appointment_date}",
+                    "time_slot": "${form.time_slot}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "DETAILS",
+      "title": "Patient Details",
+      "terminal": false,
+      "data": {
+        "doctor": {
+          "type": "string",
+          "__example__": "dr_mahesh"
+        },
+        "appointment_date": {
+          "type": "string",
+          "__example__": "2026-02-04"
+        },
+        "time_slot": {
+          "type": "string",
+          "__example__": "09:00 AM"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "Form",
+            "name": "patient_form",
+            "children": [
+              {
+                "type": "TextInput",
+                "name": "patient_name",
+                "label": "Patient Full Name",
+                "required": true,
+                "input-type": "text",
+                "helper-text": "Enter the patient's full name"
+              },
+              {
+                "type": "TextInput",
+                "name": "phone",
+                "label": "Phone Number",
+                "required": true,
+                "input-type": "phone",
+                "helper-text": "Enter contact number"
+              },
+              {
+                "type": "TextInput",
+                "name": "patient_identifier",
+                "label": "Patient ID (optional)",
+                "required": false,
+                "input-type": "text",
+                "helper-text": "Enter hospital patient ID if available"
+              },
+              {
+                "type": "Footer",
+                "label": "Review & Confirm",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "trigger": "details_submitted",
+                    "doctor": "${data.doctor}",
+                    "appointment_date": "${data.appointment_date}",
+                    "time_slot": "${data.time_slot}",
+                    "patient_name": "${form.patient_name}",
+                    "phone": "${form.phone}",
+                    "patient_identifier": "${form.patient_identifier}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "SUMMARY",
+      "title": "Confirm Appointment",
+      "terminal": true,
+      "data": {
+        "summary_text": {
+          "type": "string",
+          "__example__": "Dr. Mahesh Babu (Cardiology)\nDate: Tue, 04 Feb 2026\nTime: 09:00 AM"
+        },
+        "patient_text": {
+          "type": "string",
+          "__example__": "Patient: John Doe\nPhone: +91 9876543210"
+        },
+        "doctor": {
+          "type": "string",
+          "__example__": "dr_mahesh"
+        },
+        "doctor_name": {
+          "type": "string",
+          "__example__": "Dr. Mahesh Babu (Cardiology)"
+        },
+        "appointment_date": {
+          "type": "string",
+          "__example__": "2026-02-04"
+        },
+        "time_slot": {
+          "type": "string",
+          "__example__": "09:00 AM"
+        },
+        "patient_name": {
+          "type": "string",
+          "__example__": "John Doe"
+        },
+        "phone": {
+          "type": "string",
+          "__example__": "+91 9876543210"
+        },
+        "patient_identifier": {
+          "type": "string",
+          "__example__": "MRN-100245"
+        }
+      },
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextHeading",
+            "text": "Appointment Summary"
+          },
+          {
+            "type": "TextSubheading",
+            "text": "Please review your appointment details:"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.summary_text}"
+          },
+          {
+            "type": "TextBody",
+            "text": "${data.patient_text}"
+          },
+          {
+            "type": "Form",
+            "name": "confirm_form",
+            "children": [
+              {
+                "type": "Footer",
+                "label": "Confirm Appointment",
+                "on-click-action": {
+                  "name": "complete",
+                  "payload": {
+                    "doctor": "${data.doctor}",
+                    "doctor_name": "${data.doctor_name}",
+                    "appointment_date": "${data.appointment_date}",
+                    "time_slot": "${data.time_slot}",
+                    "patient_name": "${data.patient_name}",
+                    "phone": "${data.phone}",
+                    "patient_identifier": "${data.patient_identifier}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

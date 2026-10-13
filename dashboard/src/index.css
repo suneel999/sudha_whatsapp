@@ -1,0 +1,197 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* Mallika Hospital Brand Colors */
+@theme {
+  --color-primary: #0891b2;
+  --color-primary-dark: #0e7490;
+  --color-primary-light: #22d3ee;
+  --color-secondary: #6366f1;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Sidebar */
+.sidebar-gradient {
+  background: linear-gradient(180deg, #0e7490 0%, #0891b2 50%, #06b6d4 100%);
+}
+
+/* Cards */
+.card {
+  @apply bg-white rounded-2xl border border-slate-100 shadow-sm;
+}
+
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+}
+
+/* Stats Card */
+.stat-card {
+  @apply bg-white rounded-2xl p-6 border border-slate-100 relative overflow-hidden;
+}
+
+.stat-card::before {
+  content: '';
+  @apply absolute top-0 left-0 w-1 h-full;
+}
+
+.stat-card.cyan::before { @apply bg-cyan-500; }
+.stat-card.indigo::before { @apply bg-indigo-500; }
+.stat-card.emerald::before { @apply bg-emerald-500; }
+.stat-card.rose::before { @apply bg-rose-500; }
+.stat-card.amber::before { @apply bg-amber-500; }
+
+/* Buttons */
+.btn {
+  @apply px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2;
+}
+
+.btn-primary {
+  @apply bg-cyan-600 text-white hover:bg-cyan-700;
+}
+
+.btn-secondary {
+  @apply bg-slate-100 text-slate-700 hover:bg-slate-200;
+}
+
+.btn-ghost {
+  @apply text-slate-500 hover:bg-slate-100 hover:text-slate-700;
+}
+
+/* Input */
+.input {
+  @apply px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm transition-all;
+}
+
+.input:focus {
+  @apply outline-none ring-2 ring-cyan-500 border-transparent;
+}
+
+/* Badge */
+.badge {
+  @apply px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+}
+
+.badge-success { @apply bg-emerald-100 text-emerald-700; }
+.badge-warning { @apply bg-amber-100 text-amber-700; }
+.badge-danger { @apply bg-rose-100 text-rose-700; }
+.badge-info { @apply bg-cyan-100 text-cyan-700; }
+.badge-default { @apply bg-slate-100 text-slate-600; }
+
+/* Avatar */
+.avatar {
+  @apply w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm uppercase;
+}
+
+/* Table */
+.table-container {
+  @apply bg-white rounded-2xl border border-slate-100 overflow-hidden;
+}
+
+.table-header {
+  @apply bg-slate-50 px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider;
+}
+
+.table-cell {
+  @apply px-6 py-4 text-sm;
+}
+
+.table-row {
+  @apply border-b border-slate-50 hover:bg-slate-50/50 transition-colors;
+}
+
+/* Chat Bubble */
+.chat-bubble {
+  @apply max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed;
+}
+
+.chat-bubble.inbound {
+  @apply bg-slate-100 text-slate-700 rounded-tl-none;
+}
+
+.chat-bubble.outbound {
+  @apply bg-cyan-600 text-white rounded-tr-none ml-auto;
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-gradient-to-r from-cyan-600 to-cyan-400 bg-clip-text text-transparent;
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+/* Glassmorphism Utilities */
+.glass {
+  @apply backdrop-blur-md bg-white/70 border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+}
+
+.glass-dark {
+  @apply backdrop-blur-md bg-slate-900/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.2)];
+}
+
+.glass-badge {
+  @apply backdrop-blur-sm border border-white/30 shadow-sm font-semibold;
+}
+
+.glass-badge-success { @apply bg-emerald-400/10 text-emerald-600 border-emerald-400/20; }
+.glass-badge-warning { @apply bg-amber-400/10 text-amber-600 border-amber-400/20; }
+.glass-badge-danger { @apply bg-rose-400/10 text-rose-600 border-rose-400/20; }
+.glass-badge-info { @apply bg-cyan-400/10 text-cyan-600 border-cyan-400/20; }
+.glass-badge-default { @apply bg-slate-400/10 text-slate-600 border-slate-400/20; }
+
+.glass-badge-wa { @apply bg-emerald-400/10 text-emerald-600 border-emerald-400/20; }
+.glass-badge-ig { @apply bg-pink-400/10 text-pink-600 border-pink-400/20; }
+.glass-badge-fb { @apply bg-blue-400/10 text-blue-600 border-blue-400/20; }
+
+/* Premium Table Styles */
+.premium-table-row {
+  @apply border-b border-slate-50 hover:bg-white hover:shadow-xl hover:shadow-black/5 hover:relative hover:z-10 transition-all duration-300;
+}
+
+.premium-time-badge {
+  @apply inline-flex flex-col text-right pr-4 border-r border-slate-100 mr-4;
+}
