@@ -1,9 +1,10 @@
 # Sudha WhatsApp — Live Deploy Checklist
 
-**Domain:** `https://chat.sudhahospital.com`  
-**Webhook:** `https://chat.sudhahospital.com/webhook`  
+**Domain:** `https://chat.sudhahospitalkphb.com`  
+**Webhook:** `https://chat.sudhahospitalkphb.com/webhook`  
 **WhatsApp number:** +91 63098 00624 (Phone number ID `1398344433361229`)  
-**Verify token:** `sudha_verify_token`
+**Verify token:** `sudha_verify_token`  
+**GitHub repo:** `https://github.com/suneel999/sudha_whatsapp`
 
 Do these steps in order.
 
@@ -20,29 +21,19 @@ Do these steps in order.
 3. Attach Elastic IP (recommended).
 4. Note the public IP.
 
-### A2. DNS (where sudhahospital.com is managed)
-1. Add **A record**:
+### A2. DNS (sudhahospitalkphb.com)
+1. Add **A record** on `sudhahospitalkphb.com`:
    - Host: `chat`
    - Value: EC2 public / Elastic IP
    - TTL: 300
-2. Wait until `ping chat.sudhahospital.com` resolves to that IP.
+2. Wait until `ping chat.sudhahospitalkphb.com` resolves to that IP.
 
 ### A3. GitHub / Git repo
-1. Create empty GitHub repo: `sudha_hospital_whatsapp` (private recommended).
-2. On your PC (project folder already prepared):
-   ```bash
-   cd D:\sudha_hospital_whatsapp
-   git init -b main
-   git add .
-   git commit -m "Initial Sudha Hospital WhatsApp bot"
-   git remote add origin https://github.com/YOUR_USER/sudha_hospital_whatsapp.git
-   git push -u origin main
-   ```
-3. **Never commit `.env`** (already in `.gitignore`).
+Repo already exists: https://github.com/suneel999/sudha_whatsapp
 
 ### A4. Meta WhatsApp (after HTTPS works — do this last)
 1. Meta Developer → your App → **WhatsApp → Configuration**
-2. Callback URL: `https://chat.sudhahospital.com/webhook`
+2. Callback URL: `https://chat.sudhahospitalkphb.com/webhook`
 3. Verify token: `sudha_verify_token`
 4. Verify and save
 5. Webhook fields → subscribe **messages**
@@ -65,8 +56,8 @@ sudo apt install -y python3-venv python3-pip nginx git certbot python3-certbot-n
 ### B2. Clone code
 ```bash
 cd /home/ubuntu
-git clone https://github.com/YOUR_USER/sudha_hospital_whatsapp.git
-cd sudha_hospital_whatsapp
+git clone https://github.com/suneel999/sudha_whatsapp.git
+cd sudha_whatsapp
 ```
 
 ### B3. Python env
@@ -78,7 +69,7 @@ pip install -r requirements.txt
 
 ### B4. Create `.env` on server (paste secrets here — do not commit)
 ```bash
-nano /home/ubuntu/sudha_hospital_whatsapp/.env
+nano /home/ubuntu/sudha_whatsapp/.env
 ```
 
 ```env
@@ -108,28 +99,30 @@ curl http://127.0.0.1:8000/health
 
 ### B6. nginx
 ```bash
-sudo cp deploy/nginx-chat.sudhahospital.com.conf /etc/nginx/sites-available/chat.sudhahospital.com
-sudo ln -sf /etc/nginx/sites-available/chat.sudhahospital.com /etc/nginx/sites-enabled/
+sudo cp deploy/nginx-chat.sudhahospitalkphb.com.conf /etc/nginx/sites-available/chat.sudhahospitalkphb.com
+sudo ln -sf /etc/nginx/sites-available/chat.sudhahospitalkphb.com /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
+# remove broken old symlink if any
+sudo rm -f /etc/nginx/sites-enabled/chat.sudhahospital.com
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
 ### B7. HTTPS (required for Meta)
 ```bash
-sudo certbot --nginx -d chat.sudhahospital.com
+sudo certbot --nginx -d chat.sudhahospitalkphb.com
 ```
 
 Test:
 ```bash
-curl https://chat.sudhahospital.com/health
+curl https://chat.sudhahospitalkphb.com/health
 ```
 
 ---
 
 ## C. Connect Meta + test live
 
-1. Complete **A4** (Meta webhook → `https://chat.sudhahospital.com/webhook`)
+1. Complete **A4** (Meta webhook → `https://chat.sudhahospitalkphb.com/webhook`)
 2. From your phone, message **+91 63098 00624**: `hi`
 3. You should get Sudha Hospital service menu
 4. Watch logs:
@@ -142,7 +135,7 @@ curl https://chat.sudhahospital.com/health
 ## D. Later updates
 
 ```bash
-cd /home/ubuntu/sudha_hospital_whatsapp
+cd /home/ubuntu/sudha_whatsapp
 git pull
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -157,7 +150,7 @@ sudo systemctl restart sudha-whatsapp
 |---------|-----|
 | Meta verify fails | Bot not running, nginx wrong, or verify token mismatch |
 | Verify OK but no reply | Subscribe **messages**; check `journalctl -u sudha-whatsapp -f` |
-| DNS not resolving | Wait for A record; check Elastic IP |
+| DNS not resolving | Wait for A record `chat` on sudhahospitalkphb.com |
 | 502 Bad Gateway | `sudo systemctl status sudha-whatsapp` — gunicorn down |
 | Token expired | Generate new token in Meta → update server `.env` → restart service |
 
@@ -168,7 +161,7 @@ sudo systemctl restart sudha-whatsapp
 ```text
 WhatsApp user
     → Meta Cloud API
-    → https://chat.sudhahospital.com/webhook
+    → https://chat.sudhahospitalkphb.com/webhook
     → nginx → gunicorn (port 8000)
     → Sudha bot reply
 ```

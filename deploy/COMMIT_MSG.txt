@@ -1,1 +1,1 @@
-Initial Sudha Hospital WhatsApp bot for live deploy
+Use live domain chat.sudhahospitalkphb.com for nginx and deploy docs
