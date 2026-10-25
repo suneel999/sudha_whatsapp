@@ -989,10 +989,9 @@ const App: React.FC = () => {
                     {[
                       { label: 'Patients', value: stats?.total_patients || 0, icon: Users, color: 'cyan' },
                       { label: 'Bookings', value: stats?.total_appointments || 0, icon: Calendar, color: 'indigo' },
-                      { label: 'IPD Open', value: stats?.open_enquiries || 0, icon: Bed, color: 'amber' },
-                      { label: 'Pharmacy Queue', value: stats?.pending_pharmacy || 0, icon: Activity, color: 'emerald' },
-                      { label: "Today's Bookings", value: stats?.today_appointments || 0, icon: CalendarDays, color: 'rose' },
-                      { label: 'Alerts', value: stats?.unread_notifications || 0, icon: Bell, color: 'violet' },
+                      { label: 'Admission Open', value: stats?.open_enquiries || 0, icon: Bed, color: 'amber' },
+                      { label: "Today's Bookings", value: stats?.today_appointments || 0, icon: CalendarDays, color: 'emerald' },
+                      { label: 'Alerts', value: stats?.unread_notifications || 0, icon: Bell, color: 'rose' },
                     ].map((stat, idx) => (
                       <div key={idx} className={`stat-card ${stat.color} card-hover`}>
                         <div className="flex justify-between items-start mb-3">
@@ -1004,6 +1003,18 @@ const App: React.FC = () => {
                         <h3 className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</h3>
                       </div>
                     ))}
+                    <a
+                      href="tel:+918143800624"
+                      className="stat-card violet card-hover block"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="p-2.5 rounded-xl bg-violet-50 text-violet-600">
+                          <Phone size={20} />
+                        </div>
+                      </div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Reception</p>
+                      <h3 className="text-xl font-bold text-slate-800 mt-1">81438 00624</h3>
+                    </a>
                   </div>
 
                   {/* WhatsApp channel only for Sudha */}

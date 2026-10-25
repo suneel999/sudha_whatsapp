@@ -9,8 +9,11 @@ class MainMenuPayload:
     OPD = "MENU_OPD"
     ULTRASOUND = "MENU_ULTRASOUND"
     LAB = "MENU_LAB"
-    PHARMACY = "MENU_PHARMACY"
+    LOCATION = "MENU_LOCATION"
+    ABOUT = "MENU_ABOUT"
     IPD = "MENU_IPD"
+    # Legacy (removed from menu)
+    PHARMACY = "MENU_PHARMACY"
 
 
 class OPDPayload:
@@ -20,6 +23,9 @@ class OPDPayload:
     CONCERN_MENSTRUAL = "OPD_CONCERN_MENSTRUAL"
     CONCERN_INFERTILITY = "OPD_CONCERN_INFERTILITY"
     CONCERN_MENOPAUSE = "OPD_CONCERN_MENOPAUSE"
+    CONCERN_POST_DELIVERY = "OPD_CONCERN_POST_DELIVERY"
+    CONCERN_CANCER = "OPD_CONCERN_CANCER"
+    CONCERN_WELLNESS = "OPD_CONCERN_WELLNESS"
     PREGNANT_YES = "OPD_PREG_YES"
     PREGNANT_NO = "OPD_PREG_NO"
     TRIMESTER_1 = "OPD_TRIM_1"
@@ -76,10 +82,25 @@ class PharmacyPayload:
 
 class IPDPayload:
     ADMISSION = "IPD_ADMISSION"
+    RECEPTION = "IPD_RECEPTION"
+    SURG_GROUP_OBSTETRIC = "IPD_SURG_GRP_OBS"
+    SURG_GROUP_GYNE = "IPD_SURG_GRP_GYN"
+    SURG_CAESAREAN = "IPD_SURG_CS"
+    SURG_CERCLAGE = "IPD_SURG_CERCLAGE"
+    SURG_DNC = "IPD_SURG_DNC"
+    SURG_ENDOMETRIAL = "IPD_SURG_ENDO"
+    SURG_LAP_TUBE = "IPD_SURG_LAP_TUBE"
+    SURG_OPEN_TUBE = "IPD_SURG_OPEN_TUBE"
+    SURG_LAP_HYST = "IPD_SURG_LAP_HYST"
+    SURG_OPEN_HYST = "IPD_SURG_OPEN_HYST"
+    SURG_DIAG_HYSTERO = "IPD_SURG_DIAG_HYST"
+    SURG_DIAG_LAP = "IPD_SURG_DIAG_LAP"
+    SURG_LAP_CYST = "IPD_SURG_LAP_CYST"
+    SURG_BARTHOLIN = "IPD_SURG_BARTHOLIN"
+    # Legacy (removed from menu)
     ROOM = "IPD_ROOM"
     INSURANCE = "IPD_INSURANCE"
     BILLING = "IPD_BILLING"
-    RECEPTION = "IPD_RECEPTION"
     SKIP_HOSPITAL_ID = "IPD_SKIP_HOSPITAL_ID"
     BACK_TO_MENU = "IPD_BACK_MENU"
 
@@ -102,6 +123,9 @@ OPD_CONCERN_MAP = {
     OPDPayload.CONCERN_MENSTRUAL: {"id": "menstrual", "name": "Menstrual Problems"},
     OPDPayload.CONCERN_INFERTILITY: {"id": "infertility", "name": "Infertility"},
     OPDPayload.CONCERN_MENOPAUSE: {"id": "menopause", "name": "Menopause"},
+    OPDPayload.CONCERN_POST_DELIVERY: {"id": "post_delivery", "name": "Post Delivery Care"},
+    OPDPayload.CONCERN_CANCER: {"id": "cancer_screening", "name": "Cancer Screening"},
+    OPDPayload.CONCERN_WELLNESS: {"id": "wellness", "name": "General Wellness Checkup"},
 }
 
 OPD_TRIMESTER_MAP = {
@@ -141,13 +165,38 @@ LAB_TEST_MAP = {
     LabPayload.TEST_OTHERS: {"id": "others", "name": "Others"},
 }
 
-IPD_ENQUIRY_MAP = {
-    IPDPayload.ADMISSION: {"id": "admission", "name": "Admission Enquiry"},
-    IPDPayload.ROOM: {"id": "room", "name": "Room Availability"},
-    IPDPayload.INSURANCE: {"id": "insurance", "name": "Insurance"},
-    IPDPayload.BILLING: {"id": "billing", "name": "Billing"},
+IPD_MENU_MAP = {
+    IPDPayload.ADMISSION: {"id": "admission", "name": "Admission / Surgery"},
     IPDPayload.RECEPTION: {"id": "reception", "name": "Contact Reception"},
 }
+
+IPD_SURGERY_GROUP_MAP = {
+    IPDPayload.SURG_GROUP_OBSTETRIC: {"id": "obstetric", "name": "Obstetric"},
+    IPDPayload.SURG_GROUP_GYNE: {"id": "gynecological", "name": "Gynecological"},
+}
+
+IPD_OBSTETRIC_SURGERY_MAP = {
+    IPDPayload.SURG_CAESAREAN: {"id": "caesarean", "name": "Caesarean section"},
+    IPDPayload.SURG_CERCLAGE: {"id": "cerclage", "name": "Cerclage"},
+    IPDPayload.SURG_DNC: {"id": "dnc", "name": "D and C"},
+}
+
+IPD_GYNE_SURGERY_MAP = {
+    IPDPayload.SURG_ENDOMETRIAL: {"id": "endometrial", "name": "Endometrial Biopsy"},
+    IPDPayload.SURG_LAP_TUBE: {"id": "lap_tubectomy", "name": "Lap tubectomy"},
+    IPDPayload.SURG_OPEN_TUBE: {"id": "open_tubectomy", "name": "Open tubectomy"},
+    IPDPayload.SURG_LAP_HYST: {"id": "lap_hysterectomy", "name": "Lap hysterectomy"},
+    IPDPayload.SURG_OPEN_HYST: {"id": "open_hysterectomy", "name": "Open hysterectomy"},
+    IPDPayload.SURG_DIAG_HYSTERO: {"id": "diag_hysteroscopy", "name": "Diagnostic Hysteroscopy"},
+    IPDPayload.SURG_DIAG_LAP: {"id": "diag_laparoscopy", "name": "Diagnostic Laparoscopy"},
+    IPDPayload.SURG_LAP_CYST: {"id": "lap_cystectomy", "name": "Lap cystectomy"},
+    IPDPayload.SURG_BARTHOLIN: {"id": "bartholin", "name": "Bartholin abscess drain"},
+}
+
+IPD_SURGERY_MAP = {**IPD_OBSTETRIC_SURGERY_MAP, **IPD_GYNE_SURGERY_MAP}
+
+# Back-compat alias used by older imports
+IPD_ENQUIRY_MAP = IPD_MENU_MAP
 
 GLOBAL_PAYLOADS: Set[str] = {
     GlobalPayload.MAIN_MENU,
@@ -160,17 +209,16 @@ VALID_PAYLOADS_BY_STATE: Dict[str, Set[str]] = {
         MainMenuPayload.OPD,
         MainMenuPayload.ULTRASOUND,
         MainMenuPayload.LAB,
-        MainMenuPayload.PHARMACY,
+        MainMenuPayload.LOCATION,
+        MainMenuPayload.ABOUT,
         MainMenuPayload.IPD,
+        MainMenuPayload.PHARMACY,
         GlobalPayload.HELP,
     },
     "OPD_FLOW": {
         OPDPayload.MARRIED,
         OPDPayload.UNMARRIED,
-        OPDPayload.CONCERN_PREGNANCY,
-        OPDPayload.CONCERN_MENSTRUAL,
-        OPDPayload.CONCERN_INFERTILITY,
-        OPDPayload.CONCERN_MENOPAUSE,
+        *OPD_CONCERN_MAP.keys(),
         OPDPayload.PREGNANT_YES,
         OPDPayload.PREGNANT_NO,
         OPDPayload.TRIMESTER_1,
@@ -218,7 +266,12 @@ VALID_PAYLOADS_BY_STATE: Dict[str, Set[str]] = {
         GlobalPayload.CANCEL,
     },
     "IPD_FLOW": {
-        *IPD_ENQUIRY_MAP.keys(),
+        *IPD_MENU_MAP.keys(),
+        *IPD_SURGERY_GROUP_MAP.keys(),
+        *IPD_SURGERY_MAP.keys(),
+        IPDPayload.ROOM,
+        IPDPayload.INSURANCE,
+        IPDPayload.BILLING,
         IPDPayload.SKIP_HOSPITAL_ID,
         IPDPayload.BACK_TO_MENU,
         GlobalPayload.MAIN_MENU,
@@ -274,8 +327,9 @@ def get_main_menu_payload_from_text(message: str) -> Optional[str]:
         "1": MainMenuPayload.OPD,
         "2": MainMenuPayload.ULTRASOUND,
         "3": MainMenuPayload.LAB,
-        "4": MainMenuPayload.PHARMACY,
-        "5": MainMenuPayload.IPD,
+        "4": MainMenuPayload.LOCATION,
+        "5": MainMenuPayload.ABOUT,
+        "6": MainMenuPayload.IPD,
         "opd": MainMenuPayload.OPD,
         "out patient": MainMenuPayload.OPD,
         "outpatient": MainMenuPayload.OPD,
@@ -283,12 +337,16 @@ def get_main_menu_payload_from_text(message: str) -> Optional[str]:
         "scan": MainMenuPayload.ULTRASOUND,
         "lab": MainMenuPayload.LAB,
         "laboratory": MainMenuPayload.LAB,
-        "pharmacy": MainMenuPayload.PHARMACY,
-        "medicine": MainMenuPayload.PHARMACY,
+        "location": MainMenuPayload.LOCATION,
+        "address": MainMenuPayload.LOCATION,
+        "directions": MainMenuPayload.LOCATION,
+        "about": MainMenuPayload.ABOUT,
+        "website": MainMenuPayload.ABOUT,
         "ipd": MainMenuPayload.IPD,
         "admission": MainMenuPayload.IPD,
         "in patient": MainMenuPayload.IPD,
         "inpatient": MainMenuPayload.IPD,
+        "surgery": MainMenuPayload.IPD,
         "menu": GlobalPayload.MAIN_MENU,
         "main menu": GlobalPayload.MAIN_MENU,
         "home": GlobalPayload.MAIN_MENU,

@@ -303,12 +303,48 @@ def main_menu_list(intro: str = None) -> Dict[str, Any]:
                         {"id": MainMenuPayload.OPD, "title": "Out Patient", "description": "Consultation booking"},
                         {"id": MainMenuPayload.ULTRASOUND, "title": "Ultrasound", "description": "Scan booking"},
                         {"id": MainMenuPayload.LAB, "title": "Lab Services", "description": "Lab test booking"},
-                        {"id": MainMenuPayload.PHARMACY, "title": "Pharmacy", "description": "Medicines & prescription"},
-                        {"id": MainMenuPayload.IPD, "title": "In Patient", "description": "Admission & billing help"},
+                        {"id": MainMenuPayload.LOCATION, "title": "Location", "description": "Hospital address & map"},
+                        {"id": MainMenuPayload.ABOUT, "title": "About Hospital", "description": "sudhahospitalkphb.com"},
+                        {"id": MainMenuPayload.IPD, "title": "Admission", "description": "Surgery & reception"},
                     ],
                 }
             ],
         },
+    }
+
+
+def location_reply(clinic: dict) -> Dict[str, Any]:
+    address = clinic.get("address") or "Sudha Hospital, KPHB, Hyderabad"
+    maps = clinic.get("maps_url") or ""
+    website = clinic.get("website") or "https://sudhahospitalkphb.com/"
+    phone = clinic.get("reception_phone") or clinic.get("phone") or "+91 81438 00624"
+    lines = [
+        f"📍 *{clinic.get('name', 'Sudha Hospital')}*",
+        "",
+        address,
+    ]
+    if maps:
+        lines.extend(["", f"🗺 Map: {maps}"])
+    lines.extend([
+        "",
+        f"📞 {phone}",
+        f"🌐 {website}",
+    ])
+    return {
+        "text": "\n".join(lines),
+        "buttons": [{"id": GlobalPayload.MAIN_MENU, "title": "🏠 Main Menu"}],
+    }
+
+
+def about_reply(clinic: dict) -> Dict[str, Any]:
+    website = clinic.get("website") or "https://sudhahospitalkphb.com/"
+    return {
+        "text": (
+            f"🏥 *About {clinic.get('name', 'Sudha Hospital')}*\n\n"
+            f"{clinic.get('type', 'Women & Multi-specialty Hospital')}\n\n"
+            f"Visit us:\n{website}"
+        ),
+        "buttons": [{"id": GlobalPayload.MAIN_MENU, "title": "🏠 Main Menu"}],
     }
 
 
@@ -360,7 +396,10 @@ def parse_name_age(text: str) -> Tuple[Optional[str], Optional[str], Optional[st
 
 def ask_name_age(intro: str = None) -> Dict[str, Any]:
     return {
-        "text": (intro or "Enter patient details") + "\n\nType *Name, Age*\nExample: `Anitha, 28`"
+        "text": (
+            (intro or "Almost done")
+            + "\n\nType *Name, Age* in one message\nExample: `Anitha, 28`"
+        )
     }
 
 

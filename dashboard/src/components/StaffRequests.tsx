@@ -36,9 +36,11 @@ const FLOW_FILTERS = [
   { id: 'opd', label: 'OPD', icon: Stethoscope },
   { id: 'ultrasound', label: 'Ultrasound', icon: ScanLine },
   { id: 'lab', label: 'Lab', icon: TestTube },
-  { id: 'pharmacy', label: 'Pharmacy', icon: Pill },
-  { id: 'ipd', label: 'IPD', icon: Bed },
+  { id: 'ipd', label: 'Admission', icon: Bed },
 ];
+
+const RECEPTION_TEL = 'tel:+918143800624';
+const RECEPTION_DISPLAY = '+91 81438 00624';
 
 const QUEUE_FILTERS = [
   { id: 'action', label: 'Needs action' },
@@ -195,8 +197,8 @@ export default function StaffRequests({ apiBase }: Props) {
         {[
           { label: 'Needs action', value: summary.open, tone: 'text-amber-700 bg-amber-50 border-amber-100' },
           { label: "Today's bookings", value: summary.todayCount, tone: 'text-sky-700 bg-sky-50 border-sky-100' },
-          { label: 'Pharmacy', value: summary.byFlow.pharmacy || 0, tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
-          { label: 'IPD enquiries', value: summary.byFlow.ipd || 0, tone: 'text-rose-700 bg-rose-50 border-rose-100' },
+          { label: 'OPD / Scans / Lab', value: (summary.byFlow.opd || 0) + (summary.byFlow.ultrasound || 0) + (summary.byFlow.lab || 0), tone: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
+          { label: 'Admission', value: summary.byFlow.ipd || 0, tone: 'text-rose-700 bg-rose-50 border-rose-100' },
         ].map((card) => (
           <div key={card.label} className={`rounded-2xl border px-4 py-3 ${card.tone}`}>
             <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{card.label}</p>
@@ -205,11 +207,24 @@ export default function StaffRequests({ apiBase }: Props) {
         ))}
       </div>
 
+      <div className="rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-rose-800">Admission desk / Reception</p>
+          <p className="text-xs text-rose-700 mt-0.5">Use this number for patient call-backs from Admission enquiries</p>
+        </div>
+        <a
+          href={RECEPTION_TEL}
+          className="px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-semibold inline-flex items-center gap-2 hover:bg-rose-700"
+        >
+          <Phone size={14} /> {RECEPTION_DISPLAY}
+        </a>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-xl font-bold text-slate-800">Front Desk Inbox</h3>
           <p className="text-sm text-slate-500">
-            Sudha WhatsApp: OPD · Ultrasound · Lab · Pharmacy · IPD
+            Sudha WhatsApp: OPD · Ultrasound · Lab · Admission
           </p>
         </div>
         <div className="flex gap-2">

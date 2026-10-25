@@ -14,7 +14,7 @@ from button_payloads import (
     is_valid_payload,
 )
 from config import get_clinic_config
-from handlers.common_booking import handle_post_booking, main_menu_list
+from handlers.common_booking import about_reply, handle_post_booking, location_reply, main_menu_list
 from handlers.ipd_handler import handle_ipd_flow, start_ipd_prompt
 from handlers.lab_handler import handle_lab_flow, start_lab_prompt
 from handlers.opd_handler import handle_opd_flow, start_opd_prompt
@@ -90,13 +90,15 @@ def _handle_global_payload(user_id: str, payload: str, clinic: dict) -> Dict[str
             "text": (
                 f"*{clinic['name']} - Help*\n\n"
                 "Services:\n"
-                "• Out Patient Services\n"
-                "• Ultrasound Scanning\n"
+                "• Out Patient\n"
+                "• Ultrasound\n"
                 "• Lab Services\n"
-                "• Pharmacy\n"
-                "• In Patient Services\n\n"
-                f"📞 {clinic.get('phone', '')}\n"
-                f"🕒 {clinic.get('hours', '')}"
+                "• Location\n"
+                "• About Hospital\n"
+                "• Admission\n\n"
+                f"📞 Reception: {clinic.get('reception_phone') or clinic.get('phone', '')}\n"
+                f"🕒 {clinic.get('hours', '')}\n"
+                f"🌐 {clinic.get('website', '')}"
             ),
             "buttons": [{"id": GlobalPayload.MAIN_MENU, "title": "🏠 Main Menu"}],
         }
@@ -129,9 +131,16 @@ def _handle_main_menu_payload(user_id: str, payload: str, clinic: dict, clinic_i
     if payload == MainMenuPayload.LAB:
         start_lab_flow(user_id)
         return start_lab_prompt()
+    if payload == MainMenuPayload.LOCATION:
+        reset_to_main_menu(user_id)
+        return location_reply(clinic)
+    if payload == MainMenuPayload.ABOUT:
+        reset_to_main_menu(user_id)
+        return about_reply(clinic)
     if payload == MainMenuPayload.PHARMACY:
-        start_pharmacy_flow(user_id)
-        return start_pharmacy_prompt()
+        # Pharmacy removed — send location / reception instead
+        reset_to_main_menu(user_id)
+        return location_reply(clinic)
     if payload == MainMenuPayload.IPD:
         start_ipd_flow(user_id)
         return start_ipd_prompt()

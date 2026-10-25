@@ -11,16 +11,18 @@ def get_main_menu_buttons(clinic: dict, intro_text: str = None) -> Dict[str, Any
 
 
 def get_help_message(clinic: dict) -> Dict[str, Any]:
+    reception = clinic.get("reception_phone") or clinic.get("phone", "")
     body = f"""*{clinic['name']} - Help*
 
 Services:
-• Out Patient Services
-• Ultrasound Scanning
+• Out Patient
+• Ultrasound
 • Lab Services
-• Pharmacy
-• In Patient Services
+• Location
+• About Hospital
+• Admission
 
-📞 Reception: {clinic.get('phone', '')}
+📞 Reception: {reception}
 🕒 {clinic.get('hours', '')}
 🌐 {clinic.get('website', '')}"""
     return {
